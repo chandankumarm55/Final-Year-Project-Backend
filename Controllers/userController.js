@@ -81,7 +81,10 @@ export const login = async(req, res) => {
             _id: user._id,
             username: user.username,
             fullname: user.fullname,
-            profilePhoto: user.profile
+            profile: user.profile,
+            blockedUsers: user.blockedUsers,
+            joinedAt: user.createdAt,
+            bio: user.bio
         });
     } catch (error) {
         console.log(error);
@@ -142,7 +145,7 @@ export const setProfilePic = async(req, res) => {
             user.profile = `uploads/${req.file.filename}`;
             await user.save();
 
-            res.status(200).json({ message: 'Profile picture updated successfully', profile: user.profile });
+            res.status(200).json({ message: 'Profile picture updated successfully', user });
         } catch (error) {
             res.status(500).json({ message: 'Server error', error: error.message });
         }
@@ -163,10 +166,71 @@ export const getProfile = async(req, res) => {
         return res.status(500).json({ message: "Server error" });
     }
 };
+export const setBio = async(req, res) => {
+    const { bio } = req.body;
+    const loggedIn = req.id;
 
-// Make sure you have the correct route setup
-import express from 'express';
-const router = express.Router();
-router.route('/getProfile/:id').get(getProfile);
+    try {
+        // Find the user by ID and update the bio field
+        const user = await User.findByIdAndUpdate(
+            loggedIn, // Use the loggedIn variable directly
+            { bio }, // Update operation
+            { new: true } // Option to return the updated document
+        );
 
-export default router;
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        return res.status(200).json({ message: "Bio updated successfully", user });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Failed to update bio" });
+    }
+};
+
+export const deleteAccount = async(req, res) => {
+    const userId = req.id; // Assuming req.id is the user ID
+    try {
+        console.log(`User ID: ${userId}`);
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        await User.deleteOne({ _id: userId });
+        return res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+export const blockUser = async(req, res) => {
+    const userId = req.id;
+    const { selectedUser } = req.params;
+
+    try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        const isBlocked = user.blockedUsers.includes(selectedUser);
+
+        if (isBlocked) {
+            // If the user is already blocked, unblock them
+            user.blockedUsers = user.blockedUsers.filter(id => id.toString() !== selectedUser);
+            await user.save();
+            return res.status(200).json({ message: "User unblocked successfully", blockedUsers: user.blockedUsers });
+        } else {
+
+            user.blockedUsers.push(selectedUser);
+            await user.save();
+            return res.status(200).json({ message: "User blocked successfully", blockedUsers: user.blockedUsers });
+        }
+    } catch (error) {
+        console.error(error); // Log the error for debugging
+        return res.status(500).json({ message: 'Failed to toggle block status' });
+    }
+};

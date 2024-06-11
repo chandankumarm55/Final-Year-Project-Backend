@@ -15,6 +15,6 @@ const messageModel = new mongoose.Schema({
         type: String,
         required: true
     }
-}, { timestamp: true })
+}, { timestamps: true })
 
 export const Message = mongoose.model("Message", messageModel)

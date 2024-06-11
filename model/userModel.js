@@ -22,7 +22,13 @@ const userModel = mongoose.Schema({
     profile: {
         type: String,
         default: ''
-    }
-}, { timestamp: true })
+    },
+    bio: {
+        type: String,
+        default: ''
+    },
+    blockedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
+
+}, { timestamps: true })
 
 export const User = mongoose.model('User', userModel)

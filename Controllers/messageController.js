@@ -4,10 +4,9 @@ import { Message } from '../model/messageModel.js';
 
 export const sendMessage = async(req, res) => {
     try {
-        const senderId = req.id; // Ensure you are correctly setting req.id somewhere in your middleware
+        const senderId = req.id;
         const receiverId = req.params.id;
-        console.log("sender id is ", senderId);
-        console.log("receiver id is", receiverId);
+
 
         const { message } = req.body;
         if (!message) {
@@ -63,5 +62,28 @@ export const getMessage = async(req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: "Server error" });
+    }
+};
+
+export const clearChat = async(req, res) => {
+    const userId = req.id;
+    const selectedUserId = req.params.selectedUserId; // Assuming you pass selectedUserId as a route parameter
+
+    try {
+
+        const conversation = await Conversation.findOne({
+            participants: { $all: [userId, selectedUserId] }
+        });
+
+        if (!conversation) {
+            return res.status(200).json({ message: "No messages to delete" });
+        }
+        conversation.messages = [];
+        await conversation.save();
+
+        return res.status(200).json({ message: "All messages deleted successfully" });
+    } catch (error) {
+        console.log(error);
+        return res.status(400).json({ message: error.message });
     }
 };

@@ -9,6 +9,6 @@ const ConversationModel = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Message'
     }]
-}, { timestamp: true })
+}, { timestamps: true })
 
 export const Conversation = mongoose.model("Conversation", ConversationModel)
