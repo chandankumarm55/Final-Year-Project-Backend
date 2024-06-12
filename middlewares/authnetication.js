@@ -3,15 +3,18 @@ import jwt from 'jsonwebtoken'
 const isAuthenticated = async(req, res, next) => {
     try {
         const token = req.cookies.token;
+        console.log(token)
         if (!token) {
             return res.status(401).json({ message: "User Not authenticated" })
         }
         const decode = await jwt.verify(token, process.env.JWT_KEY)
+        console.log(decode)
 
         if (!decode) {
             return res.status(401).json({ message: 'Invaild Token' })
         };
         req.id = decode.userId;
+         console.log(req.id)
         next()
 
     } catch (error) {
