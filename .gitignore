@@ -1,8 +1,4 @@
-# Ignore package.json
-package.json
 
-# Ignore log files
-package-lock.json
 
 node_modules
 
