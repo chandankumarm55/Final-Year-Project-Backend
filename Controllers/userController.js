@@ -78,12 +78,7 @@ export const login = async(req, res) => {
 
         const secure = process.env.NODE_ENV === 'production';
 
-        return res.status(200).cookie("token", token, {
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-  httpOnly: true,
-  sameSite: 'none', // Allow cross-site requests
-  secure, // Set the secure option based on your environment
-}).json({
+         return res.status(200).cookie("token", token, { maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).json({
             message: "Login successful",
             _id: user._id,
             username: user.username,
