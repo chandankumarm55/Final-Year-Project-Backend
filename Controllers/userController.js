@@ -73,7 +73,8 @@ export const login = async(req, res) => {
         const tokenData = {
             userId: user._id,
         };
-        const token = await jwt.sign(tokenData, process.env.JWT_KEY, { expiresIn: '1d' });
+        const token = await jwt.sign(tokenData, process.env.JWT_KEY, { expiresIn: '7d' });
+        console.log("generated token is " , token)
 
 
         return res.status(200).cookie("token", token, { maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).json({
