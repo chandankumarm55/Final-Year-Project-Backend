@@ -43,7 +43,6 @@ export const register = async(req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
-
 export const login = async (req, res) => {
   try {
     const { usernameOrEmail, password } = req.body;
@@ -66,17 +65,21 @@ export const login = async (req, res) => {
     };
     const token = await jwt.sign(tokenData, process.env.JWT_KEY, { expiresIn: '7d' });
     console.log("generated token is ", token);
-    const secure = req.protocol === 'https';
-    const sameSite = secure ? 'none' : 'lax';
 
-    return res.status(200).cookie("token", token, {
+    // Set the cookie manually in the response headers
+    const secure = req.protocol === 'https';
+    const sameSite = secure ? 'None' : 'Lax'; // Note the capitalization
+    const cookieOptions = {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       httpOnly: true,
       sameSite,
       secure,
-    }).json({
+    };
+    res.setHeader('Set-Cookie', `token=${token}; ${Object.entries(cookieOptions).map(([key, value]) => `${key}=${value}`).join('; ')}`);
+
+    return res.status(200).json({
       message: "Login successful",
-      _id: user._id,
+      *id: user.*id,
       username: user.username,
       fullname: user.fullname,
       profile: user.profile,
@@ -89,7 +92,6 @@ export const login = async (req, res) => {
     return res.status(500).json({ message: "Internal server error", success: false });
   }
 };
-
 export const logout = (req, res) => {
     try {
         return res.status(200).cookie("token", "", { maxAge: 0 }).json({ message: "logoout successfully" })
