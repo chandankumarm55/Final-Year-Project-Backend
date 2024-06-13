@@ -43,44 +43,58 @@ export const register = async(req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
-export const login = async(req, res) => {
-    try {
-        const { usernameOrEmail, password } = req.body;
-        const isEmail = usernameOrEmail.includes('@');
-        let user;
-        if (isEmail) {
-            user = await User.findOne({ email: usernameOrEmail });
-        } else {
-            user = await User.findOne({ username: usernameOrEmail });
-        }
-        if (!user) {
-            return res.status(400).json({ message: "User does not exist", success: false });
-        }
-        const passwordVerify = await bcrypt.compare(password, user.password);
-        if (!passwordVerify) {
-            return res.status(400).json({ message: "Username/email or password incorrect", success: false });
-        }
-        const tokenData = {
-            userId: user._id,
-        };
-        const token = await jwt.sign(tokenData, process.env.JWT_KEY, { expiresIn: '7d' });
-        console.log("generated token is " , token)
-        const secure = process.env.NODE_ENV === 'production';
-return res.status(200).cookie("token", token,{ maxAge: 7 * 24 * 60 * 60 * 1000, httpOnly: true, sameSite: 'strict' }).json({
-            message: "Login successful",
-            id: user.id,
-            username: user.username,
-            fullname: user.fullname,
-            profile: user.profile,
-            blockedUsers: user.blockedUsers,
-            joinedAt: user.createdAt,
-            bio: user.bio
-        });
-    } catch (error) {
-        console.log(error);
-        return res.status(500).json({ message: "Internal server error", success: false });
+
+export const login = async (req, res) => {
+  try {
+    const { usernameOrEmail, password } = req.body;
+    const isEmail = usernameOrEmail.includes('@');
+    let user;
+    if (isEmail) {
+      user = await User.findOne({ email: usernameOrEmail });
+    } else {
+      user = await User.findOne({ username: usernameOrEmail });
     }
+    if (!user) {
+      return res.status(400).json({ message: "User does not exist", success: false });
+    }
+    const passwordVerify = await bcrypt.compare(password, user.password);
+    if (!passwordVerify) {
+      return res.status(400).json({ message: "Username/email or password incorrect", success: false });
+    }
+    const tokenData = {
+      userId: user._id,
+    };
+    const token = await jwt.sign(tokenData, process.env.JWT_KEY, { expiresIn: '7d' });
+    console.log("generated token is ", token);
+
+    // Set the cookie manually in the response headers
+    const secure = req.protocol === 'https';
+    const sameSite = secure ? 'None' : 'Lax'; // Note the capitalization
+    const cookieOptions = {
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      httpOnly: true,
+      sameSite,
+      secure,
+    };
+    res.setHeader('Set-Cookie', `token=${token}; ${Object.entries(cookieOptions).map(([key, value]) => `${key}=${value}`).join('; ')}`);
+
+    return res.status(200).json({
+      message: "Login successful",
+      id: user._id,
+      username: user.username,
+      fullname: user.fullname,
+      profile: user.profile,
+      blockedUsers: user.blockedUsers,
+      joinedAt: user.createdAt,
+      bio: user.bio
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ message: "Internal server error", success: false });
+  }
 };
+
+
 export const logout = (req, res) => {
     try {
         return res.status(200).cookie("token", "", { maxAge: 0 }).json({ message: "logoout successfully" })
