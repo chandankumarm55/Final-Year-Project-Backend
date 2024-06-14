@@ -43,7 +43,6 @@ export const register = async(req, res) => {
         return res.status(500).json({ message: 'Internal server error' });
     }
 };
-
 export const login = async (req, res) => {
   try {
     const { usernameOrEmail, password } = req.body;
@@ -67,7 +66,6 @@ export const login = async (req, res) => {
     const token = await jwt.sign(tokenData, process.env.JWT_KEY, { expiresIn: '7d' });
     console.log("generated token is ", token);
 
-    // Set the cookie manually in the response headers
     const secure = req.protocol === 'https';
     const sameSite = secure ? 'None' : 'Lax'; // Note the capitalization
     const cookieOptions = {
@@ -76,7 +74,8 @@ export const login = async (req, res) => {
       sameSite,
       secure,
     };
-    res.setHeader('Set-Cookie', `token=${token}; ${Object.entries(cookieOptions).map(([key, value]) => `${key}=${value}`).join('; ')}`);
+
+    res.cookie('token', token, cookieOptions);
 
     return res.status(200).json({
       message: "Login successful",
@@ -93,7 +92,6 @@ export const login = async (req, res) => {
     return res.status(500).json({ message: "Internal server error", success: false });
   }
 };
-
 
 export const logout = (req, res) => {
     try {
